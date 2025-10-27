@@ -20,3 +20,6 @@ phone VARCHAR(20));
 INSERT INTO students (name, email, phone) VALUES
 ('Nguyen Van A', 'a@example.com', '0123456789'),
 ('Tran Thi B', 'b@example.com', '0987654321');
+
+
+

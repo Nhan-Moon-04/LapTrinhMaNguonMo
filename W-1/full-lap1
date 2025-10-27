@@ -1,0 +1,349 @@
+<?php
+// bai16.php
+$result = null;
+$error = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $n_raw = trim($_POST['n'] ?? '');
+    if ($n_raw === '' || !is_numeric($n_raw) || (int) $n_raw != $n_raw) {
+        $error = "Vui lòng nhập một số nguyên.";
+    } else {
+        $n = (int) $n_raw;
+        if ($n < 1) {
+            $error = "N phải là số nguyên dương (>= 1).";
+        } else {
+            // Tổng 1..N = N*(N+1)/2
+            $result = $n * ($n + 1) / 2;
+        }
+    }
+}
+?>
+<!doctype html>
+<html lang="vi">
+
+
+<body>
+    <form method="post">
+        <label>Nhập N: <input type="number" name="n" required min="1"></label>
+        <button type="submit">Tính</button>
+    </form>
+    <?php if ($error): ?>
+        <p style="color:red"><?= htmlspecialchars($error) ?></p>
+    <?php elseif ($result !== null): ?>
+        <p>Kết quả: <strong><?= (int) $result ?></strong></p>
+    <?php endif; ?>
+</body>
+
+</html>
+
+
+
+
+
+<?php
+// bai17.php
+mb_internal_encoding('UTF-8');
+
+function viet_hoa_toan_bo(string $str): string
+{
+    return mb_strtoupper($str, 'UTF-8');
+}
+
+$output = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = $_POST['input'] ?? '';
+    $output = viet_hoa_toan_bo($input);
+}
+?>
+<!doctype html>
+<html lang="vi">
+
+
+<body>
+    <form method="post">
+        <label>Chuỗi đầu vào:</label><br>
+        <textarea name="input" rows="4" cols="60"
+            required><?= isset($_POST['input']) ? htmlspecialchars($_POST['input']) : '' ?></textarea><br>
+        <button type="submit">Chuyển sang VIẾT HOA</button>
+    </form>
+
+    <?php if ($output !== ''): ?>
+        <h3>Kết quả:</h3>
+        <pre><?= htmlspecialchars($output) ?></pre>
+    <?php endif; ?>
+</body>
+
+</html>
+
+
+
+
+<?php
+// bai18.php
+session_start();
+if (!isset($_SESSION['students'])) {
+    $_SESSION['students'] = []; // mỗi phần tử: ['name' => '...', 'score' => 0..10]
+}
+
+$err = null;
+
+// Thêm sinh viên
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
+    $name = trim($_POST['name'] ?? '');
+    $score_raw = trim($_POST['score'] ?? '');
+
+    if ($name === '') {
+        $err = "Họ tên không được để trống.";
+    } elseif (!is_numeric($score_raw)) {
+        $err = "Điểm phải là số.";
+    } else {
+        $score = (float) $score_raw;
+        if ($score < 0 || $score > 10) {
+            $err = "Điểm phải trong khoảng 0..10.";
+        } else {
+            $_SESSION['students'][] = ['name' => $name, 'score' => $score];
+        }
+    }
+}
+
+// Xóa toàn bộ danh sách (tùy chọn)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'clear') {
+    $_SESSION['students'] = [];
+}
+
+$students = $_SESSION['students'];
+
+// Tính điểm cao nhất
+$maxScore = null;
+$tops = [];
+if (!empty($students)) {
+    $scores = array_column($students, 'score');
+    $maxScore = max($scores);
+    foreach ($students as $s) {
+        if ($s['score'] == $maxScore) {
+            $tops[] = $s;
+        }
+    }
+}
+?>
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <title>Bài 18 - DS Sinh viên</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        td,
+        th {
+            border: 1px solid #999;
+            padding: 6px 10px;
+        }
+
+        .highlight {
+            background: #fffae6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <form method="post" style="margin-bottom:1rem;">
+        <input type="hidden" name="action" value="add">
+        <label>Họ tên: <input name="name" required></label>
+        <label>Điểm: <input type="number" name="score" step="0.1" min="0" max="10" required></label>
+        <button type="submit">Thêm</button>
+    </form>
+
+    <form method="post" onsubmit="return confirm('Xóa toàn bộ danh sách?');" style="margin-bottom:1rem;">
+        <input type="hidden" name="action" value="clear">
+        <button type="submit">Xóa toàn bộ</button>
+    </form>
+
+    <?php if ($err): ?>
+        <p style="color:red"><?= htmlspecialchars($err) ?></p>
+    <?php endif; ?>
+
+    <?php if (!empty($students)): ?>
+        <h3>Danh sách sinh viên</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Họ tên</th>
+                    <th>Điểm</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($students as $i => $s): ?>
+                    <tr class="<?= ($maxScore !== null && $s['score'] == $maxScore) ? 'highlight' : '' ?>">
+                        <td><?= $i + 1 ?></td>
+                        <td><?= htmlspecialchars($s['name']) ?></td>
+                        <td><?= htmlspecialchars($s['score']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <h3>Kết quả</h3>
+        <p>Điểm cao nhất: <strong><?= htmlspecialchars($maxScore) ?></strong></p>
+        <ul>
+            <?php foreach ($tops as $t): ?>
+                <li><?= htmlspecialchars($t['name']) ?> (<?= htmlspecialchars($t['score']) ?>)</li>
+            <?php endforeach; ?>
+        </ul>
+    <?php else: ?>
+        <p>Chưa có sinh viên nào. Hãy thêm ở form trên.</p>
+    <?php endif; ?>
+</body>
+
+</html>
+
+
+
+
+<?php
+// bai19.php
+$noteFile = __DIR__ . '/note.txt';
+$msg = null;
+$err = null;
+
+// Ghi note
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save') {
+    $content = trim($_POST['content'] ?? '');
+    if ($content === '') {
+        $err = "Nội dung không được trống.";
+    } else {
+        $line = "[" . date('Y-m-d H:i:s') . "] " . $content . PHP_EOL;
+        // Ghi nối, khóa file để tránh race condition
+        $ok = @file_put_contents($noteFile, $line, FILE_APPEND | LOCK_EX);
+        if ($ok === false) {
+            $err = "Không thể ghi vào file. Kiểm tra quyền ghi thư mục.";
+        } else {
+            $msg = "Đã lưu.";
+        }
+    }
+}
+
+// Xóa file
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'clear') {
+    if (file_exists($noteFile)) {
+        @unlink($noteFile);
+        $msg = "Đã xóa note.txt.";
+    } else {
+        $msg = "Không có file để xóa.";
+    }
+}
+
+$all = file_exists($noteFile) ? file_get_contents($noteFile) : '';
+?>
+<!doctype html>
+<html lang="vi">
+
+
+<body>
+
+
+    <form method="post">
+        <input type="hidden" name="action" value="save">
+        <label>Nội dung:</label><br>
+        <textarea name="content" rows="4" cols="70" required></textarea><br>
+        <button type="submit">Lưu</button>
+    </form>
+
+    <form method="post" style="margin-top:0.5rem" onsubmit="return confirm('Xóa toàn bộ nội dung note.txt?');">
+        <input type="hidden" name="action" value="clear">
+        <button type="submit">Xóa file</button>
+    </form>
+
+    <?php if ($msg): ?>
+        <p style="color:green"><?= htmlspecialchars($msg) ?></p><?php endif; ?>
+    <?php if ($err): ?>
+        <p style="color:red"><?= htmlspecialchars($err) ?></p><?php endif; ?>
+
+    <h3>Nội dung đã lưu (note.txt)</h3>
+    <pre style="white-space:pre-wrap; word-wrap:break-word; background:#f7f7f7; padding:10px;">
+<?= htmlspecialchars($all) ?>
+</pre>
+</body>
+
+</html>
+
+
+
+
+<?php
+// bai20.php
+$cookieName = 'username';
+$greetingName = $_COOKIE[$cookieName] ?? null;
+$notice = null;
+
+// Lưu tên vào Cookie
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save') {
+    $name = trim($_POST['name'] ?? '');
+    if ($name === '') {
+        $notice = "Tên không được trống.";
+    } else {
+        // Hết hạn sau 30 ngày
+        $expiry = time() + 30 * 24 * 60 * 60;
+        // Từ PHP 7.3 có mảng options:
+        $options = [
+            'expires' => $expiry,
+            'path' => '/',
+            'httponly' => true,
+            // 'secure' => true, // bật khi dùng HTTPS
+            'samesite' => 'Lax',
+        ];
+        setcookie($cookieName, $name, $options);
+        // Sau khi set cookie, cập nhật biến hiện tại
+        $greetingName = $name;
+        $notice = "Đã ghi nhớ tên của bạn.";
+    }
+}
+
+// Xóa Cookie
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'forget') {
+    $options = [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'httponly' => true,
+        // 'secure' => true,
+        'samesite' => 'Lax',
+    ];
+    setcookie($cookieName, '', $options);
+    $greetingName = null;
+    $notice = "Đã quên bạn. Vui lòng nhập lại tên.";
+}
+?>
+<!doctype html>
+<html lang="vi">
+
+
+
+<body>
+
+
+    <?php if ($notice): ?>
+        <p style="color:green"><?= htmlspecialchars($notice) ?></p>
+    <?php endif; ?>
+
+    <?php if ($greetingName): ?>
+        <p>Xin chào, <strong><?= htmlspecialchars($greetingName) ?></strong>! Rất vui được gặp lại bạn 👋</p>
+        <form method="post" style="margin-top:1rem;">
+            <input type="hidden" name="action" value="forget">
+            <button type="submit">Quên tôi (xóa Cookie)</button>
+        </form>
+    <?php else: ?>
+        <p>Chào mừng bạn! Đây là lần đầu truy cập hoặc Cookie đã bị xoá.</p>
+        <form method="post">
+            <input type="hidden" name="action" value="save">
+            <label>Nhập tên của bạn: <input name="name" required></label>
+            <button type="submit">Ghi nhớ</button>
+        </form>
+    <?php endif; ?>
+</body>
+
+</html>
