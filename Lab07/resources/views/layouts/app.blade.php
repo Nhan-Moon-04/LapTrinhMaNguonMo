@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>@yield('title', 'Articles')</title>
+    <title>@yield('title','Articles')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -51,7 +51,7 @@
     @include('partials.nav')
     <div class="container">
         @if(session('success'))
-            <div class="flash">{{ session('success') }}</div>
+        <div class="flash">{{ session('success') }}</div>
         @endif
         @yield('content')
     </div>

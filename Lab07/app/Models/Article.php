@@ -2,28 +2,57 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class Article extends Model
+class Article
 {
-    // Mock dữ liệu
-    private static $dataset = [
-        1 => ['id' => 1, 'title' => 'Giới thiệu Laravel', 'body' => 'Nội dung demo A'],
-        2 => ['id' => 2, 'title' => 'Blade nâng cao', 'body' => 'Nội dung demo B'],
-    ];
+    public $id;
+    public $title;
 
-    // override resolveRouteBinding để giả lập findOrFail
-    public function resolveRouteBinding($value, $field = null)
+    public $noidung;
+
+    public function __construct($id, $title, $noidung)
     {
-        if (isset(self::$dataset[$value])) {
-            $article = new self();
-            $article->fill(self::$dataset[$value]);
-            return $article;
-        }
-
-        throw (new ModelNotFoundException)->setModel(self::class, $value);
+        $this->id = $id;
+        $this->title = $title;
+        $this->noidung = $noidung;
     }
 
-    protected $fillable = ['id', 'title', 'body'];
+    // Lấy tất cả bài viết (mock)
+    public static function all()
+    {
+        return [
+            1 => new Article(1, 'Laravel 12', 'Sản phẩm ncc'),
+            2 => new Article(2, 'Blade Components', 'aaaaaaaaaaaaaaaaaa'),
+            3 => new Article(3, 'Route Model Binding', 'aaaaaaaaaaaaaaa'),
+        ];
+    }
+
+
+   // Tìm 1 bài viết
+    public static function findOrFail($id)
+    {
+         $id = (int) $id; 
+         
+        $articles = self::all();
+
+        if (isset($articles[$id])) {
+            return $articles[$id];
+        }
+
+        abort(404, 'Article not found');
+    }
+
+    // Giả lập xoá (ở đây chỉ cần kiểm tra tồn tại)
+    public static function delete($id)
+    {
+        $articles = self::all();
+        if (! isset($articles[$id])) {
+            abort(404, 'Article not found');
+        }
+
+        // Demo: sau này xoá DB, giờ return true
+        return true;
+    }
 }
